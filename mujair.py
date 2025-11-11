@@ -65,48 +65,44 @@ def check_email_exists(supabase: Client, email: str) -> bool:
 
 # ⭐ PERBAIKAN: Handle Verification dari URL
 def handle_verification():
-    """Handle callback verifikasi dari email"""
-    query_params = st.query_params
-    
-    if "access_token" in query_params:
-        access_token = query_params.get("access_token", "")
-        
-        supabase = init_supabase()
-        
-        try:
-            if access_token == "recovery":
-                # Token untuk reset password
-                st.session_state.recovery_token = access_token
-                st.session_state.page = "reset_password"
-                st.query_params.clear()
-                st.rerun()
-                
-            elif access_token == "signup":
-                # Token untuk verifikasi signup
-                refresh_token = query_params.get("refresh_token", "")
-                
-                # Set session untuk verifikasi
-                supabase.auth.set_session(access_token, refresh_token)
-                
-                # Update status verifikasi di database
-                user = supabase.auth.get_user()
-                if user and user.user:
-                    supabase.table('users').update({
-                        "is_verified": True
-                    }).eq('id', user.user.id).execute()
-                    
-                    st.success("✅ Email berhasil diverifikasi!")
-                    st.info("Silakan login dengan email dan password Anda.")
-                
-                # Clear query params
-                st.query_params.clear()
-                
-                # Sign out setelah verifikasi
-                supabase.auth.sign_out()
-                
-        except Exception as e:
-            st.error(f"❌ Verifikasi gagal: {str(e)}")
+    """Handle callback verifikasi dari email Supabase"""
+    params = st.query_params
+
+    if "access_token" not in params:
+        return
+
+    access_token = params.get("access_token", "")
+    refresh_token = params.get("refresh_token", "")
+    type_ = params.get("type", "")
+
+    supabase = init_supabase()
+
+    try:
+        # kalau ada refresh_token → itu verify email signup
+        if refresh_token:
+            supabase.auth.set_session(access_token, refresh_token)
+
+            user = supabase.auth.get_user()
+
+            if user and user.user:
+                supabase.table("users").update({"is_verified": True}).eq("id", user.user.id).execute()
+                st.success("✅ Email berhasil diverifikasi!")
+
+            supabase.auth.sign_out()
             st.query_params.clear()
+            st.rerun()
+
+        # kalau tidak ada refresh_token → ini reset password (recovery / magiclink)
+        else:
+            st.session_state.recovery_token = access_token
+            st.session_state.page = "reset_password"
+            st.query_params.clear()
+            st.rerun()
+
+    except Exception as e:
+        st.error(f"❌ Verifikasi gagal: {e}")
+        st.query_params.clear()
+
 
 # Halaman Register
 def register_page(supabase: Client, role: str):
