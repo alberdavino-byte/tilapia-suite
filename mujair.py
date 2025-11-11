@@ -17,7 +17,7 @@ def get_app_url():
         return url.rstrip('/')
     
     # ⚠️ GANTI dengan URL Streamlit app Anda!
-    return "https://https://tilapia-suite-rmjbydvuajkwqwfs.streamlit.app/"
+    return "https://tilapia-suite-rmjbydvuajkwqwfs.streamlit.app/"
 
 # Inisialisasi Supabase
 @st.cache_resource
@@ -69,20 +69,19 @@ def handle_verification():
     query_params = st.query_params
     
     if "access_token" in query_params:
-        token_type = query_params.get("type", "")
         access_token = query_params.get("access_token", "")
         
         supabase = init_supabase()
         
         try:
-            if token_type == "recovery":
+            if access_token == "recovery":
                 # Token untuk reset password
                 st.session_state.recovery_token = access_token
                 st.session_state.page = "reset_password"
                 st.query_params.clear()
                 st.rerun()
                 
-            elif token_type == "signup":
+            elif access_token == "signup":
                 # Token untuk verifikasi signup
                 refresh_token = query_params.get("refresh_token", "")
                 
@@ -343,6 +342,7 @@ def reset_password_page(supabase: Client):
             else:
                 try:
                     with st.spinner("Mengubah password..."):
+                        supabase.auth.set_session(st.session_state.recovery_token, "")
                         supabase.auth.update_user({"password": new_password})
                         
                         st.success("✅ Password berhasil diubah!")
@@ -521,5 +521,4 @@ def main():
             register_page(supabase, role)
 
 if __name__ == "__main__":
-
     main()
