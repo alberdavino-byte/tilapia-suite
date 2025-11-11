@@ -17,7 +17,7 @@ def get_app_url():
         return url.rstrip('/')
     
     # ⚠️ GANTI dengan URL Streamlit app Anda!
-    return "https://mujairapppy-rmhevsrmjbydvuajkwqwfs.streamlit.app"
+    return "https://https://tilapia-suite-rmjbydvuajkwqwfs.streamlit.app/"
 
 # Inisialisasi Supabase
 @st.cache_resource
@@ -521,4 +521,5 @@ def main():
             register_page(supabase, role)
 
 if __name__ == "__main__":
+
     main()
